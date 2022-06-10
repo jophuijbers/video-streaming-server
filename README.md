@@ -1,4 +1,4 @@
-# sensehub-api
+# Video Streaming server and API
 
 ## Start locally
 Install dependencies: ```npm install```
