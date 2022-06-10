@@ -9,7 +9,7 @@ const UserSchema = mongoose.Schema({
 }, {timestamps: true})
 
 UserSchema.pre('save', async function(next) {
-    this.role !== null ? this.role : 'user'
+    this.role = this.role || 'user'
 
     if (!this.isModified('password')) return next()
 
@@ -51,7 +51,9 @@ UserSchema.methods.generateJWT = function() {
     return jwt.sign({
         id: this._id,
         username: this.username
-    }, process.env.ACCESS_TOKEN_SECRET)
+    }, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: '1d'
+    })
 }
 
 module.exports = mongoose.model('User', UserSchema)

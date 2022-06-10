@@ -1,5 +1,5 @@
 const mongoose = require("mongoose")
-const {getDuration, getVideoPath} = require('../services/video.service')
+const {getDuration} = require('../services/video.service')
 const {getImagePath} = require('../services/image.service')
 
 const VideoSchema = mongoose.Schema({
@@ -8,10 +8,16 @@ const VideoSchema = mongoose.Schema({
     duration: String
 })
 
+VideoSchema.pre('save', async function() {
+    if(this.duration) return
+    this.duration = await getDuration(this.path)
+})
+
 const UploadSchema = mongoose.Schema({
 	name: String,
     image: String,
     videos: [VideoSchema],
+    tags: [String],
     creator: Object,
 }, {timestamps: true})
 
@@ -25,9 +31,11 @@ UploadSchema.methods.toJSON = function() {
             return {
                 id: video._id,
                 name: video.name,
-                path: `${process.env.API_URL}/api/stream/${this._id}/${video._id}`
+                path: `${process.env.API_URL}/api/stream/${this._id}/${video._id}`,
+                duration: video.duration
             }
         }),
+        tags: this.tags,
         length: this.videos.length,
         createdAt: this.createdAt,
         updatedAt: this.updatedAt

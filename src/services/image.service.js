@@ -1,9 +1,6 @@
-const { v4 } = require('uuid')
-
-function saveImage(res, image) {
+function saveImage(name, image) {
     if (image) {
-        const id = v4()
-        const fileName = `${id}.${image.mimetype.split('/')[1]}`
+        const fileName = `${name}.${image.mimetype.split('/')[1]}`
         image.mv(`./public/thumbnails/${fileName}`)
         return fileName
     }

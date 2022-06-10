@@ -2,7 +2,7 @@ const router = require('express').Router()
 const fileUpload = require('express-fileupload')
 const Upload = require('../models/Upload')
 const {saveImage} = require('../services/image.service')
-const {saveVideosWithFiles, saveVideosByName} = require('../services/video.service')
+const {saveVideos} = require('../services/video.service')
 const {isAuth, isAdmin} = require('../middleware')
 
 router.use(fileUpload({
@@ -11,7 +11,17 @@ router.use(fileUpload({
 
 router.get('/', isAuth, async(req, res, next) => {
     try {
-        const uploads = await Upload.find()
+        let uploads = []
+
+        if (!req.query.search && !req.query.tag) uploads = await Upload.find()
+        if (req.query.search) uploads = await Upload.find().or([
+            { name: {$regex: req.query.search, $options: 'i'} },
+            { tags: {$regex: req.query.search, $options: 'i' } }
+        ])
+
+        if (req.query.tag === 'recent') uploads = await Upload.find({}).sort({createdAt: -1}).limit(10)
+        else if (req.query.tag) uploads = await Upload.find({ tags: req.query.tag })
+
         res.json(uploads)
     } catch(err) {
         next(err)
@@ -28,19 +38,43 @@ router.get('/:id', isAuth, async(req, res, next) => {
 })
 
 router.post('/', isAuth, isAdmin, async(req, res, next) => {
-    if(!req.files.videos && !req.body.videos) res.status(400).json({message: 'No videos provided'})
-
-    const upload = new Upload({
-        name: req.body.name,
-        creator: req.user.toJSONCreator()
-    })
-
     try {
-        if(req.files.image) upload.image = saveImage(res, req.files.image)
-        if(req.files.videos) upload.videos = await saveVideosWithFiles(req.files.videos, req.body.name)
-        else if(req.body.videos) upload.videos = saveVideosByName(req.body.videos, req.body.name)
+        const upload = new Upload({
+            name: req.body.name,
+            creator: req.user.toJSONCreator(),
+            videos: await saveVideos(req.body.name)
+        })
+
+        if(req.body.tags) upload.tags = req.body.tags.split(' ')
+        if(req.files && req.files.image) upload.image = saveImage(req.body.name, req.files.image)
+
         const newUpload = await upload.save()
         res.json(newUpload)
+    } catch(err) {
+        next(err)
+    }
+})
+
+router.patch('/:id', isAuth, isAdmin, async(req, res, next) => {
+    try {
+        const upload = await Upload.findById(req.params.id)
+        if (req.body.name) upload.name = req.body.name
+        if (req.files && req.files.image) upload.image = saveImage(req.body.name, req.files.image)
+        if(req.body.tags) upload.tags = req.body.tags.split(' ')
+        if (req.body.name) upload.videos = saveVideos(req.body.name)
+
+        const newUpload = await upload.save()
+        res.json(newUpload)
+    } catch(err) {
+        next(err)
+    }
+})
+
+router.delete('/:id', isAuth, isAdmin, async(req, res, next) => {
+    try {
+        const upload = await Upload.findById(req.params.id)
+        await upload.delete()
+        res.sendStatus(204)
     } catch(err) {
         next(err)
     }
