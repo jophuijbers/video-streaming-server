@@ -1,5 +1,6 @@
 const router = require('express').Router()
 const fileUpload = require('express-fileupload')
+const moment = require('moment')
 const Upload = require('../models/Upload')
 const {saveImage} = require('../services/image.service')
 const {saveVideos} = require('../services/video.service')
@@ -19,7 +20,11 @@ router.get('/', isAuth, async(req, res, next) => {
             { tags: {$regex: req.query.search, $options: 'i' } }
         ])
 
-        if (req.query.tag === 'recent') uploads = await Upload.find({}).sort({createdAt: -1}).limit(10)
+        if (req.query.tag === 'recent') uploads = await Upload.find({
+            createdAt: {
+                $gt: moment().subtract(7, "d").toDate()
+            }
+        }).sort({createdAt: -1})
         else if (req.query.tag) uploads = await Upload.find({ tags: req.query.tag })
 
         res.json(uploads)
