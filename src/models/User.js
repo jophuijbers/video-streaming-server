@@ -52,7 +52,7 @@ UserSchema.methods.generateJWT = function() {
         id: this._id,
         username: this.username
     }, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: '1d'
+        expiresIn: '7d'
     })
 }
 
