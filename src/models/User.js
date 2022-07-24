@@ -1,11 +1,13 @@
 const mongoose = require("mongoose")
 const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
+const moment = require('moment')
 
 const UserSchema = mongoose.Schema({
 	username: String,
 	password: String,
-    role: String
+    role: String,
+    lastLogin: Date
 }, {timestamps: true})
 
 UserSchema.pre('save', async function(next) {
@@ -21,7 +23,8 @@ UserSchema.methods.toJSON = function() {
         id: this._id,
         username: this.username,
         role: this.role,
-        isAdmin: this.role === 'admin'
+        isAdmin: this.role === 'admin',
+        lastLogin: this.getLastLogin()
     }
 }
 
@@ -48,12 +51,23 @@ UserSchema.methods.comparePassword = async function(password) {
 }
 
 UserSchema.methods.generateJWT = function() {
+    this.setLastLogin()
     return jwt.sign({
         id: this._id,
         username: this.username
     }, process.env.ACCESS_TOKEN_SECRET, {
         expiresIn: '7d'
     })
+}
+
+UserSchema.methods.setLastLogin = function() {
+    this.lastLogin = Date.now()
+    this.save()
+}
+
+UserSchema.methods.getLastLogin = function() {
+    if (!this.lastLogin) return
+    return moment(this.lastLogin).locale('nl').format('L')
 }
 
 module.exports = mongoose.model('User', UserSchema)
