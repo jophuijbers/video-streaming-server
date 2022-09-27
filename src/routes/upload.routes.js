@@ -45,7 +45,7 @@ router.post('/', isAuth, isAdmin, async(req, res, next) => {
         const upload = new Upload({
             name: req.body.name,
             creator: req.user.toJSONCreator(),
-            videos: await saveVideos(req.body.name)
+            videos: saveVideos(req.body.name)
         })
 
         if(req.body.tags) upload.tags = req.body.tags.split(' ')
@@ -61,10 +61,12 @@ router.post('/', isAuth, isAdmin, async(req, res, next) => {
 router.patch('/:id', isAuth, isAdmin, async(req, res, next) => {
     try {
         const upload = await Upload.findById(req.params.id)
-        if (req.body.name) upload.name = req.body.name
+        if (req.body.name) {
+            upload.name = req.body.name
+            upload.videos = saveVideos(req.body.name)
+        }
         if (req.files && req.files.image) upload.image = saveImage(req.body.name, req.files.image)
         if(req.body.tags) upload.tags = req.body.tags.split(' ')
-        if (req.body.name) upload.videos = saveVideos(req.body.name)
 
         const newUpload = await upload.save()
         res.json(newUpload)
