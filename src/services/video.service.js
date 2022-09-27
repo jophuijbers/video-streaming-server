@@ -5,7 +5,9 @@ const fs = require('fs')
 function saveVideos(directory) {
     const collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'})
 
-    const dir = `./videos/${directory}`
+    const dir = fs.existsSync(`./videos/${directory}`) ?
+        `./videos/${directory}` : `./videos1/${directory}`
+	
     const contents = fs.readdirSync(dir).sort(collator.compare)
 
     let videos = []
