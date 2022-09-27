@@ -12,21 +12,19 @@ router.use(fileUpload({
 
 router.get('/', isAuth, async(req, res, next) => {
     try {
-        let uploads = []
+        let filters = {}
+        if (req.query.search) filters = {
+            $or: [
+                { name: {$regex: req.query.search, $options: 'i'} },
+                { tags: {$regex: req.query.search, $options: 'i'} }
+            ]
+        }
+        else if (req.query.tag === 'recent') filters = {
+            createdAt: { $gt: moment().subtract(7, "d").toDate() }
+        }
+        else if (req.query.tag) filters = { tags: req.query.tag }
 
-        if (!req.query.search && !req.query.tag) uploads = await Upload.find()
-        if (req.query.search) uploads = await Upload.find().or([
-            { name: {$regex: req.query.search, $options: 'i'} },
-            { tags: {$regex: req.query.search, $options: 'i' } }
-        ])
-
-        if (req.query.tag === 'recent') uploads = await Upload.find({
-            createdAt: {
-                $gt: moment().subtract(7, "d").toDate()
-            }
-        }).sort({createdAt: -1})
-        else if (req.query.tag) uploads = await Upload.find({ tags: req.query.tag })
-
+        const uploads = await Upload.find(filters).sort({ createdAt: -1 })
         res.json(uploads)
     } catch(err) {
         next(err)
