@@ -7,7 +7,8 @@ const UserSchema = mongoose.Schema({
 	username: String,
 	password: String,
     role: String,
-    lastLogin: Date
+    lastLogin: Date,
+    watched: [{type: mongoose.Schema.Types.ObjectId, ref: 'Video'}]
 }, {timestamps: true})
 
 UserSchema.pre('save', async function(next) {
@@ -68,6 +69,16 @@ UserSchema.methods.setLastLogin = function() {
 UserSchema.methods.getLastLogin = function() {
     if (!this.lastLogin) return
     return moment(this.lastLogin).locale('nl').format('L')
+}
+
+UserSchema.methods.addToWatched = function(video) {
+    if (this.watched.includes(video.id)) return
+    this.watched.push(video.id)
+    this.save()
+}
+
+UserSchema.methods.hasWatched = function(video) {
+    return this.watched.includes(video.id)
 }
 
 module.exports = mongoose.model('User', UserSchema)

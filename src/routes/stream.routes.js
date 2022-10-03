@@ -1,12 +1,15 @@
 const router = require('express').Router()
 const fs = require('fs')
-const {isAuth} = require('../middleware')
 const Upload = require('../models/Upload')
+const {setAuthHeader, isAuth} = require("../middleware")
 
 // SOURCE: https://blog.logrocket.com/streaming-video-in-safari/
-router.get('/:upload/:video', async (req, res, next) => {
+router.get('/:upload/:video', setAuthHeader, isAuth, async (req, res, next) => {
     const upload = await Upload.findById(req.params.upload)
-    const filePath = upload.videos.find(video => video.id === req.params.video).path
+    const video = upload.videos.find(video => video.id === req.params.video)
+    const filePath = video.path
+
+    req.user.addToWatched(video)
 
     const options = {}
 

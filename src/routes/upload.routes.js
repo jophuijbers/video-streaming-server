@@ -20,11 +20,11 @@ router.get('/', isAuth, async(req, res, next) => {
             ]
         }
         else if (req.query.tag === 'recent') filters = {
-            createdAt: { $gt: moment().subtract(7, "d").toDate() }
+            updatedAt: { $gt: moment().subtract(7, "d").toDate() }
         }
         else if (req.query.tag) filters = { tags: req.query.tag }
 
-        const uploads = await Upload.find(filters).sort({ createdAt: -1 })
+        const uploads = await Upload.find(filters).sort({ updatedAt: -1 })
         res.json(uploads)
     } catch(err) {
         next(err)
@@ -34,7 +34,7 @@ router.get('/', isAuth, async(req, res, next) => {
 router.get('/:id', isAuth, async(req, res, next) => {
     try {
         const upload = await Upload.findById(req.params.id)
-        res.json(upload)
+        res.json(upload.fullObject(req.user))
     } catch(err) {
         next(err)
     }

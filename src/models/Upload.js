@@ -27,12 +27,27 @@ UploadSchema.methods.toJSON = function() {
         name: this.name,
         imagePath: getImagePath(this.image),
         creator: this.creator,
+        videos: this.videos,
+        tags: this.tags,
+        length: this.videos.length,
+        createdAt: this.createdAt,
+        updatedAt: this.updatedAt
+    }
+}
+
+UploadSchema.methods.fullObject = function(user) {
+    return {
+        id: this._id,
+        name: this.name,
+        imagePath: getImagePath(this.image),
+        creator: this.creator,
         videos: this.videos.map(video => {
             return {
                 id: video._id,
                 name: video.name,
                 path: `${process.env.API_URL}/api/stream/${this._id}/${video._id}`,
-                duration: video.duration
+                duration: video.duration,
+                hasWatched: user.hasWatched(video)
             }
         }),
         tags: this.tags,
