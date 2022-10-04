@@ -59,3 +59,6 @@ Check status: ```pm2 status```
 Check logs: ```pm2 logs```
 
 Clear logs: ```pm2 flush```
+
+## Setup HTTPS for Nginx
+https://dev.to/knowbee/how-to-setup-secure-subdomains-using-nginx-and-certbot-on-a-vps-4m8h
