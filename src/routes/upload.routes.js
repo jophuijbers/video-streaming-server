@@ -3,7 +3,7 @@ const fileUpload = require('express-fileupload')
 const moment = require('moment')
 const Upload = require('../models/Upload')
 const {saveImage} = require('../services/image.service')
-const {saveVideos} = require('../services/video.service')
+const {saveVideos, updateVideos} = require('../services/video.service')
 const {isAuth, isAdmin} = require('../middleware')
 
 router.use(fileUpload({
@@ -63,7 +63,7 @@ router.patch('/:id', isAuth, isAdmin, async(req, res, next) => {
         const upload = await Upload.findById(req.params.id)
         if (req.body.name) {
             upload.name = req.body.name
-            upload.videos = saveVideos(req.body.name)
+            upload.videos = updateVideos(upload)
         }
         if (req.files && req.files.image) upload.image = saveImage(req.body.name, req.files.image)
         if(req.body.tags) upload.tags = req.body.tags.split(' ')
